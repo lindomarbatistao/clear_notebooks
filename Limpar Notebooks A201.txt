@@ -1,0 +1,89 @@
+@echo off
+setlocal enableextensions
+color 1f
+title Limpeza de Sistema + Criação de Usuário Admin
+
+echo ========================================
+echo Encerrando navegadores (Chrome e Edge)...
+echo ========================================
+taskkill /F /IM chrome.exe >nul 2>&1
+taskkill /F /IM msedge.exe >nul 2>&1
+
+echo.
+echo ========================================
+echo Removendo perfis de navegadores...
+echo ========================================
+rd /s /q "%LOCALAPPDATA%\Google\Chrome\User Data" >nul 2>&1
+rd /s /q "%LOCALAPPDATA%\Microsoft\Edge\User Data" >nul 2>&1
+
+echo.
+echo ========================================
+echo Limpando áreas de trabalho dos usuários...
+echo ========================================
+:: Percorre todas as pastas de usuários em C:\Users
+:: for /d %%u in ("C:\Users\*") do (
+    :: Verifica se a pasta Desktop existe
+    :: if exist "%%u\Desktop" (
+        :: Exclui arquivos da área de trabalho
+        :: del /f /q "%%u\Desktop\*" >nul 2>&1
+        :: Remove pastas da área de trabalho
+        :: for /d %%i in ("%%u\Desktop\*") do rd /s /q "%%i" >nul 2>&1
+    :: )
+:: )
+
+echo.
+echo ========================================
+echo Restaurando papel de parede padrão...
+echo ========================================
+reg add "HKCU\Control Panel\Desktop" /v Wallpaper /t REG_SZ /d "C:\Windows\Web\Wallpaper\Windows\img0.jpg" /f >nul
+reg add "HKCU\Control Panel\Desktop" /v WallpaperStyle /t REG_SZ /d "10" /f >nul
+reg add "HKCU\Control Panel\Desktop" /v TileWallpaper /t REG_SZ /d "0" /f >nul
+RUNDLL32.EXE user32.dll,UpdatePerUserSystemParameters
+
+echo.
+echo ========================================
+echo Limpando a lixeira de todos os usuários...
+echo ========================================
+PowerShell -NoLogo -NonInteractive -Command "Clear-RecycleBin -Force -ErrorAction SilentlyContinue" >nul 2>&1
+
+echo.
+echo ========================================
+echo Limpando Documentos, Downloads e Temp do usuário 'Administrador'...
+echo ========================================
+set "ADMIN_PATH=C:\Users\Administrador"
+
+:: Documentos
+if exist "%ADMIN_PATH%\Documents" (
+    del /f /q "%ADMIN_PATH%\Documents\*" >nul 2>&1
+    for /d %%i in ("%ADMIN_PATH%\Documents\*") do rd /s /q "%%i" >nul 2>&1
+)
+
+:: Downloads
+if exist "%ADMIN_PATH%\Downloads" (
+    del /f /q "%ADMIN_PATH%\Downloads\*" >nul 2>&1
+    for /d %%i in ("%ADMIN_PATH%\Downloads\*") do rd /s /q "%%i" >nul 2>&1
+)
+
+:: Temp
+if exist "%ADMIN_PATH%\AppData\Local\Temp" (
+    del /f /q "%ADMIN_PATH%\AppData\Local\Temp\*" >nul 2>&1
+    for /d %%i in ("%ADMIN_PATH%\AppData\Local\Temp\*") do rd /s /q "%%i" >nul 2>&1
+)
+
+echo.
+echo ========================================
+echo Criando novo usuário administrador...
+echo ========================================
+net user ds senaimange501 /add
+net localgroup Administrators ds /add
+echo Usuário "ds" criado com sucesso e adicionado ao grupo Administrators.
+
+echo.
+echo ========================================
+echo Tarefa concluída com sucesso!
+echo Perfis limpos, papel de parede restaurado,
+echo lixeira e pastas do Administrador esvaziadas,
+echo e novo usuário criado.
+echo ========================================
+pause
+exit
